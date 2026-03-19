@@ -1,0 +1,12 @@
+\section{Einleitung}
+Die nachfolgende Arbeit beschäftigt sich mit der neuronalen Klassifikation dank gelernter Konzepte, die sich in Netzwerken wiederfinden.
+Hierzu wurde im  ``Independent Coursework I'' zuvor ein ``Pruning eines neuronalen Netzwerks anhand von KI-Erklärbarkeit'' ausgearbeitet. 
+Anhand der über die Layerwise Relevance Propagation (LRP) \cite{DBLP:journals/corr/abs-1912-08881} ermittelten Relevanzen, die die Erklärbarkeit von Netzwerkentscheidungen transparenter machen, konnte das Netzwerk um Einiges verkleinert werden. 
+Dagegen die durch das ProtoPNet \cite{Mohammadjafari2021Using} erreichte Erklärbarkeit sorgte für das Offenlegen von Prototypen, die aussagekräftig zur Klassifizierung beitragen. Diesbezüglich konnte das Pruning dieser für eine genauere Distinktion zwischen den Klassen hinreichend sein. 
+
+Auf diesem Hintergrund und in Anlehnung an das ``Forschungsprojekt B'' werden in dieser Arbeit dem Forschungsprojekt ähnliche Rahmenbedingungen geschaffen: Anhand des am CBMI \cite{cbmi} enstandenen Mitosen-Klassifikators\footnote[1]{Hierzu werden ebenso das zugehörige \pythoninline{state_dict_path}, der Datensatz \pythoninline{examples_ds_from_MP.train.HTW.train} und der zur Verfügung gestellte Modell-Quellcode genutzt} besteht der Fokus auf der Untersuchung der Klassifikations-Konzepten, die näher inspiziert werden können.
+
+
+In Anbetracht dessen wird auf dem in dem ``Forschungsprojekt B'' vorgestellten Ansatz zum Auffinden genutzt: Die bereits vorgestellte Concept Relevance Propagation (CRP) \cite{achtibat2022towards} eignet sich, um relevante und irrelevante Konzepte hinsichtlich einer Klassifikation zu identifizieren. Weiter kann mittels dem Python-Package Zennit-CRP \cite{achtibat2022crpzennit} dieses Vorhaben praktisch umgesetzt werden.
+
+Im Folgenden wird daher untersucht, wie diese erlernten Konzepte selektiv zu einer Mitosen-Klassifikation beitragen - und wie sich diese nach vorherigem, dem Forschungsprojekt entstandenem Pruning verändert.

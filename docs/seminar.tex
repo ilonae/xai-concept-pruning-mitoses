@@ -1,0 +1,151 @@
+% Angepasste Seminarvorlage
+%
+\listfiles
+\RequirePackage[ngerman=ngerman-x-latest]{hyphsubst}
+\documentclass[12pt,a4paper]{scrartcl}
+\usepackage[utf8]{inputenc}			% Zeichensatzkodierung
+\usepackage[style=ieee, urldate=comp, backend=biber]{biblatex}
+\usepackage[ngerman]{babel}
+\usepackage{microtype}
+\usepackage{url}
+\usepackage{csquotes}
+\usepackage{ifpdf}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{array}
+\setlength\extrarowheight{2pt}
+\usepackage[hidelinks]{hyperref}
+\usepackage{adjustbox}
+\usepackage{amsmath}
+\usepackage{algorithm, algpseudocode}
+\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
+% Default fixed font does not support bold face
+\DeclareFixedFont{\ttb}{T1}{txtt}{bx}{n}{9} % for bold
+\DeclareFixedFont{\ttm}{T1}{txtt}{m}{n}{9}  % for normal
+% Custom colors
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\usepackage{listings}
+\usepackage[font=small,labelfont=bf,skip=\baselineskip]{caption}
+\newcommand\pythonstyle{\lstset{
+language=Python,
+basicstyle=\ttm,
+captionpos=b,
+morekeywords={self},              % Add keywords here
+keywordstyle=\ttb\color{deepblue},
+emph={MyClass,__init__},          % Custom highlighting
+emphstyle=\ttb\color{deepred},    % Custom highlighting style
+stringstyle=\color{deepgreen},
+frame=tb,                         % Any extra options here
+showstringspaces=false,
+framesep=10pt,
+belowskip=1em,
+aboveskip=1em,
+}}
+% Python environment
+\lstnewenvironment{python}[1][]
+{
+\pythonstyle
+\lstset{#1}
+}
+{}
+% Python for inline
+\newcommand\pythoninline[1]{{\pythonstyle\lstinline!#1!}}
+\renewcommand{\bfseries}{\relax}
+\renewcommand{\lstlistingname}{Algorithmus}% Listing -> Algorithm
+\renewcommand{\lstlistlistingname}{Algorithmenverzeichnis}% List of Listings -> List of Algorithms
+
+
+\addbibresource{bib.bib}
+\DefineBibliographyStrings{german}{
+  andothers   = \mkbibemph{et al\adddot},
+  url         = [Online]\adddot\addspace Adresse,
+}
+
+\captionsetup{font=footnotesize}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+
+\usepackage{fancyhdr}
+\usepackage{hyphenat}
+\usepackage{graphicx}				% Einbinden von Bildern
+\usepackage{booktabs}				% "Schöne" Tabellen
+\usepackage{amsfonts}
+\sloppy
+%
+%	Hier werden Titel, Bearbeiter und das Datum eingetragen
+%
+
+\newcommand\svthema{Klassifikation anhand von neuronalen, erlernten Konzepten}
+\newcommand\svperson{Ilona Eisenbraun}
+\newcommand\svmtrkl{s0561762 }
+\newcommand\svdatum{\today} % \today für das aktuelle Datum, sonst als Text eintragen
+\newcommand\lvtyp{
+Hochschule für Technik und Wirtschaft Berlin
+\\Fachbereich 4: Informatik Kommunikation und Wirtschaft
+\\ Studiengang: Angewandte Informatik Master
+\\Kurs: Independent Coursework 2
+\\Prüfer: Prof. Dr. rer. nat. Peter Hufnagl}
+
+\newcommand{\SubItem}[1]{
+    {\setlength\itemindent{15pt} \item[-] #1}
+}
+% Das ist ein 100 Wörter umfassender Blindtext, um das Aussehen von längeren Texten zu testen.
+\newcommand{\blindtext}{\textit{}}
+
+\hypersetup{ % Thema und Author in die Meta-Daten der PDF
+  pdftitle={Seminararbeit zum Thema: \svthema},
+  pdfauthor={\svperson}
+}
+\usepackage{fancyvrb}
+\newenvironment{myverb}{%
+ \VerbatimEnvironment
+ \begin{adjustbox}{max width=\linewidth}
+ \begin{BVerbatim}
+  }{
+  \end{BVerbatim}
+ \end{adjustbox}
+}
+	
+\begin{document}
+
+% Hier wird der Titel-Bereich formatiert
+% Die zuvor definierten Textbausteine werden hier verwendet.
+\title{\textbf{\svthema} }
+
+{\author{ \textsc{\svperson} \\ \textsc{\svmtrkl} \\ \textsc{\svdatum}}}
+\date{ \normalsize \centering \includegraphics[width=0.5\textwidth]{images/S04_HTW_Berlin_Logo_pos_FARBIG_RGB.jpg}\\
+\textsc {\\\lvtyp}
+}
+%eigene Veränderung- FOM Logo mit eingefügt auf dem Deckblatt
+
+\maketitle
+\thispagestyle{empty} % lässt die Seitennummer auf der Titelseite verschwinden
+\pagenumbering{Roman}
+
+\renewcommand{\lstlistingname}{Algorithmus}% Listing -> Algorithm
+\renewcommand{\lstlistlistingname}{Algorithmenverzeichnis}% List of Listings -> List of Algorithms
+
+
+\cleardoublepage
+\tableofcontents	
+
+\listoftables
+\listoffigures
+\lstlistoflistings
+% Inhaltsverzeichnis ... nicht für kurze Dokumente!
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{4}
+
+\input{kapitel1.tex}
+\input{kapitel2.tex}
+\input{kapitel3.tex}
+\input{kapitel4.tex}
+
+\newpage
+\printbibliography
+\end{document}
