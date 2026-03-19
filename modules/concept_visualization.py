@@ -3,7 +3,7 @@ import os
 import torch
 import seaborn as sns
 import pandas as pd
-from utils import init_attribution_vars 
+from modules.utils import init_attribution_vars
 import zennit.image as zimage
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from matplotlib import font_manager

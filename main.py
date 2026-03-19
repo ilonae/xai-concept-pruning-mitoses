@@ -9,14 +9,14 @@ import torchvision
 from torchvision import transforms
 from torch import nn
 from sklearn.model_selection import train_test_split
-from utils import create_classification_report, measure_global_sparsity
+from modules.utils import create_classification_report, measure_global_sparsity
 
 sys.path.append('code')
 from models.pytorch_models import PretrainedCNN
-from concept_attribution import retrieve_prunable_concept_diff, retrieve_prunable_true_concepts
-from concept_visualization import gen_heatmaps_concepts, print_classification
-from concept_pruning import prune_selected_concepts
-from lamb import Lamb
+from modules.concept_attribution import retrieve_prunable_concept_diff, retrieve_prunable_true_concepts
+from modules.concept_visualization import gen_heatmaps_concepts, print_classification
+from modules.concept_pruning import prune_selected_concepts
+from modules.lamb import Lamb
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"

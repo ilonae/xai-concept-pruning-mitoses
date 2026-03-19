@@ -1,13 +1,13 @@
 
 import os
-from concept_visualization import plot_imgs
+from modules.concept_visualization import plot_imgs
 import torch
 
 import zennit.image as zimage
 import numpy as np
 from PIL import Image
 from operator import itemgetter
-from utils import init_attribution_vars, nested_dict_iter
+from modules.utils import init_attribution_vars, nested_dict_iter
 from crp.helper import abs_norm
 
 
@@ -107,7 +107,7 @@ def retrieve_prunable_true_concepts(iteration,is_pruned, model, device):
     prunable_channels_dict={}
     true_images_path='examples_ds_from_MP.train.HTW.train/True'
     true_concept_atlas = latent_attribute_imgs(true_images_path, iteration,is_pruned,
-     'true_attributions', model, device, False)
+     'outputs/true_attributions', model, device, False)
 
     torch.cuda.empty_cache()
     irrelevant_channels_dict={}
@@ -148,9 +148,9 @@ def retrieve_prunable_concept_diff(iteration,is_pruned, model, device):
     false_images_path='examples_ds_from_MP.train.HTW.train/False'
 
     true_concept_atlas = latent_attribute_imgs(true_images_path, iteration,is_pruned,
-     'true_attributions', model, device, False)
+     'outputs/true_attributions', model, device, False)
     false_concept_atlas=latent_attribute_imgs(false_images_path,iteration,is_pruned,
-    'false_attributions', model, device, True)
+    'outputs/false_attributions', model, device, True)
     #print(false_concept_atlas)
     torch.cuda.empty_cache()
     irrelevant_channels_dict={}
