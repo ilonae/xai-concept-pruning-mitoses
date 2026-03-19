@@ -10,7 +10,7 @@ def prune_selected_concepts(max_vote_concept_dict,model):
             layer_nr = int(key.split('.', 1)[1])
             mod = key.split('.', 1)[0]
             if mod == module_name:
-                mask_tensor = torch.ones(module[layer_nr].weight.shape, device='cuda:0')
+                mask_tensor = torch.ones(module[layer_nr].weight.shape, device=module[layer_nr].weight.device)
                 for concept in value:
                     #pruning differences between Conv2d and Linear layer
                     if isinstance(module[layer_nr], nn.Conv2d):

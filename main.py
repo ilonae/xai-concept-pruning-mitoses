@@ -3,21 +3,20 @@ import torch
 import os
 import cv2
 import sys
-import imp
 import torchvision
 
 
 from torchvision import transforms
 from torch import nn
 from sklearn.model_selection import train_test_split
-from utils import create_classification_report, measure_global_sparsity
+from modules.utils import create_classification_report, measure_global_sparsity
 
 sys.path.append('code')
 from models.pytorch_models import PretrainedCNN
-from concept_attribution import retrieve_prunable_concept_diff, retrieve_prunable_true_concepts
-from concept_visualization import gen_heatmaps_concepts, print_classification
-from concept_pruning import prune_selected_concepts
-Lamb = imp.load_source('lamb', '/home/ieisenbraun/Documents/FP/MAI_FINAL_MODEL_VGG/SOURCE/code/utils/lamb.py')
+from modules.concept_attribution import retrieve_prunable_concept_diff, retrieve_prunable_true_concepts
+from modules.concept_visualization import gen_heatmaps_concepts, print_classification
+from modules.concept_pruning import prune_selected_concepts
+from modules.lamb import Lamb
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
@@ -40,7 +39,7 @@ def evaluate_model(eval_model):
         imgtensor = torch.tensor(img.swapaxes(1,2).swapaxes(0,1),dtype=torch.float32)[None]
         pred = eval_model.predict(imgtensor.to(device),logits=True).detach().cpu()
         #print(pred)
-        pred = float(torch.nn.functional.softmax(pred)[0,1].numpy())
+        pred = float(torch.nn.functional.softmax(pred, dim=1)[0,1].numpy())
         #print(pred)
         model_pred+=pred      
     model_pred = model_pred / len(os.listdir(path))
@@ -136,13 +135,13 @@ def init_datasets(path):
 
 if __name__ == "__main__":
 
-    state_dict = torch.load('state_dict.pth')['models_state_dict']
+    state_dict = torch.load('state_dict.pth', weights_only=False)['models_state_dict']
     path = 'examples_ds_from_MP.train.HTW.train'
     model = PretrainedCNN('vgg', num_classes=2)
     model.load_state_dict(state_dict[0])
     model = model.eval()
     #print(model)
-    optimizer = Lamb.Lamb(model.parameters(), lr=0.00025, weight_decay=0.1)
+    optimizer = Lamb(model.parameters(), lr=0.00025, weight_decay=0.1)
     criterion = nn.CrossEntropyLoss()
     epochs = 10
     model.to(device)

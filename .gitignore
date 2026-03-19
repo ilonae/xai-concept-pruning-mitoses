@@ -1,3 +1,23 @@
+# LaTeX build artefacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.lol
+
+# Runtime logs and experiment output logs
+result_log.txt
+log.txt
+firebase-debug.log
+
 # Created by https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,jupyternotebooks
 

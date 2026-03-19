@@ -1,0 +1,356 @@
+\section{Implementierung}
+
+Um das Vorhaben umsetzen zu können, sind einige Python-Bibliotheken notwendig. Diese sind im Folgenden mitsamt der Versionsnummern aufgeführt:
+
+\begin{itemize}
+    \item Zennit 0.4.7 \cite{anders2021software}
+    \item Zennit-CRP 0.4.2 \cite{achtibat2022crpzennit}
+    \item Pytorch 1.12.0 \cite{NEURIPS2019_9015}
+    \item NumPy 1.22.4 \cite{harris2020array}
+    \item Pillow 9.2.0 \cite{clark2015pillow}
+    \item OpenCV 4.6.0 \cite{opencv_library}
+\end{itemize}
+Zennit und Zennit-CRP sind hier die für die Attribution der Konzepte innerhalb der Layer entscheidend.
+Dagegen Pytorch und NumPy werden für die Erstellung, Berechnung und Konvertieren von Tensoren genutzt. Pillow und OpenCV schließlich helfen, grafische Elemente zu lesen und zu verarbeiten.
+\subsection{Überblick}
+
+Im Rahmen dieses ``Independent Coursework II'' als auch dem ``Forschungsprojekt B'' enstand ein Repository, das auf Github verfügbar ist \cite{icw2github}. Die daraus entstandene Pipeline basiert auf mehreren Modulen. Die Tabelle \ref{tab:module} veranschaulicht diese näher:
+\begin{table}[ht!]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{|m{4.5cm} | m{6.2cm} | m{12.5cm}|}
+\hline
+\vspace{1ex}
+ \textbf{ Modul} &  \vspace{1ex} \textbf{Methode}   &  \vspace{1ex}  \textbf{Rolle} \\[1.5ex] \hline 
+ 
+\pythoninline{__main__.py}
+ &
+ \begin{itemize}
+\itemsep=5pt 
+    \item  \pythoninline{init_datasets}
+     \item \pythoninline{dataset_split}
+     \item \pythoninline{finetune_model}
+     \item \pythoninline{evaluate_model}
+\end{itemize}  &
+
+ \begin{itemize}
+\itemsep=5pt 
+    \item  Erstellung eines Trainings- und Validierungs-Dataloaders
+     \item Aufteilung des Datensatzes in Subsets
+     \item Adjustierung des Modells nach vorherigem Konzept-Pruning
+     \item Auswertung der Modell-Performance auf Beispieldatensatz
+\end{itemize} 
+\\  \hline
+\pythoninline{concept_attribution.py}
+ &
+ \begin{itemize}
+\itemsep=5pt 
+     \item \pythoninline{local_attribute_imgs}
+     \item \pythoninline{latent_attribute_imgs}
+     \item \pythoninline{retrieve_prunable_true_concepts}
+    \item  \pythoninline{retrieve_prunable_concept_diff}
+\end{itemize}  &
+
+ \begin{itemize}
+\itemsep=5pt 
+    \item  An der Eingabe verortete Ermittlung der relevantesten Konzepte
+    \item  Layerübergreifende Ermittlung der relevantesten Konzepte
+     \item Auszug der unwichtigen ``True''-Konzepte als Dictionary
+      \item Auszug der Konzept-Differenz der Klassen als Dictionary
+\end{itemize} 
+\\ \hline
+
+\pythoninline{concept_pruning.py}
+ &
+ \begin{itemize}
+\itemsep=5pt 
+    \item  \pythoninline{prune_selected_concepts}
+\end{itemize}  &
+
+ \begin{itemize}
+\itemsep=5pt 
+    \item  Entfernen der Netzwerk-Filter anhand des Pruning-Dictionaries
+\end{itemize} 
+\\  \hline
+
+\pythoninline{concept_visualization.py}
+ &
+ \begin{itemize}
+\itemsep=5pt 
+    \item  \pythoninline{gen_heatmaps}
+        \item  \pythoninline{gen_broadcast_heatmaps}
+            \item \pythoninline{gen_heatmaps_starting_layer}
+    \item  \pythoninline{plot_imgs}
+\end{itemize}  &
+
+ \begin{itemize}
+\itemsep=5pt 
+    \item  Erstellung Heatmap-Attributionen der Konzepte
+    \item   Erstellung Heatmap-Attributionen für mehrere Klassen
+    \item Erstellung Heatmap-Attributionen ab einem Start-Layer
+    \item Grafische Darstellung der Heatmaps mitsamt des Originals
+\end{itemize} 
+
+\\  \hline
+
+\pythoninline{utils.py}
+ &
+ \begin{itemize}
+\itemsep=5pt 
+    \item  \pythoninline{init_attribution_vars}
+        \item \pythoninline{measure_module_sparsity}
+       \item \pythoninline{measure_global_sparsity}
+    \item  \pythoninline{take}
+        \item  \pythoninline{get_max_ids}
+    \item  \pythoninline{nested_dict_iter}
+
+\end{itemize}  &
+
+ \begin{itemize}
+\itemsep=5pt 
+    \item  Initialisierung von Variablen für die Konzept-Attribution
+    \item Bemessung der layerspezifischen Parameter-Spärlichkeit
+    \item Bemessung der globalen Parameter-Spärlichkeit
+    \item Extraktion der ersten {$n$} Elemente einer Liste
+        \item Extraktion der Layer und Konzepte mit höchsten Votes
+    \item Extraktion von Schlüsseln und Werten eines geschachtelten Dictionaries
+
+\end{itemize} 
+
+\\  \hline
+
+\end{tabular}
+%
+}
+\captionof{table}{Übersicht der enstandenen Module, ihrer Methoden und die entsprechenden Funktionalitäten} \label{tab:module} 
+\end{table}
+
+Die Module sind hier hinsichtlich ihrer Aufgabenbereiche gegliedert. Obwohl einige Methoden einige Importe aus anderen Modulen nutzen, sind die Abhängigkeiten weitestgehend reduziert. Im Folgenden werden die einzelnen Module und die Funktionalitäten näher beschrieben.
+
+\subsection{Konzept-Attributierung}
+
+Um Konzepte als auch Subkonzepte verstehen zu können, kann hier mittels Zennit-CRP \cite{achtibat2022crpzennit} die relevanzbasierte Attribution bestimmt werden. In diesem Zusammenhang ist Zennit \cite{anders2021software} für die einhergehende, auf die Layerwise Relevance Propagation (LRP) basierende Propagierung wichtig. Zennit-CRP baut hierbei stark auf Zennit und die mitgelieferten Module auf.
+Es werden entsprechend zuerst Variablen gesetzt, wie im Algorithmus \ref{alg:initvars} zu sehen ist.
+
+\begin{python}[caption={Initialisierung der Variablen für die Berechnung der Konzept-Relevanzen (Auszug aus der Methode \lstinline{init_attribution_vars()})}, label=alg:initvars]
+cc = ChannelConcept()
+composite = EpsilonPlusFlat([SequentialMergeBatchNorm()])
+attribution = CondAttribution(model) 
+layer_names = get_layer_names(model, [torch.nn.Conv2d, torch.nn.Linear])
+\end{python}
+
+
+Um nun einhergehend Attributionen von Konzepten innerhalb des Netzwerks auszumachen, wird die Menge an Samples eines Datensatzes jeweils nach den Relevanz-Attributionen untersucht (Alg. \ref{alg:conceptattr}).
+\begin{python}[caption={Ermittlung der Relevanzen an jedem einzelnen Sample (Auszug aus der Methode \lstinline{latent_attribute_imgs()})}, label=alg:conceptattr]
+attr = attribution(sample, condition, composite, record_layer=layer_names)
+for model_layer in layer_names:
+    name = "model_ft"
+    single_layer = model_layer[model_layer.index('.') + 1 : ]
+    for module_name, _ in model._modules[name].named_modules():
+        if single_layer == module_name:
+            rel_c = cc.attribute(attr.relevances[model_layer], abs_norm=True)
+            concept_ids = torch.argsort(rel_c[0], descending=descending)[:10]
+\end{python}
+Über den Datensatz iterierend wird für alle Layer die Attribution \pythoninline{attr} bestimmt, um diese dann anhand ihrer \pythoninline{relevances} 
+in den einzelnen, im Netzwerk vorhandenen Layer (\pythoninline{model_layer}) zu verorten. Davon ausgehend werden die Attributionen ihrer Wichtigkeit nach sortiert, und die zehn relevantesten Konzepte abgespalten.
+
+Nachfolgend werden die zehn relevantesten Konzepte über alle Samples im Datensatz gesammelt - und anhand eines Zählers jeweils die Einträge für das Layer und die Konzept-ID inkrementiert (siehe Alg \ref{alg:conceptatlas}).
+\newpage
+\begin{python}[caption={Erstellung eines \lstinline{concept_atlas} nach einem Voting über die Konzepte über alle Samples (Auszug aus der Methode \lstinline{latent_attribute_imgs()})}, label=alg:conceptatlas]
+concept_atlas={}
+for concept in concept_ids:
+    concept = concept.cpu().item()
+    if ( (single_layer not in concept_atlas)
+       or
+       (concept not in concept_atlas[single_layer])) :
+        concept_atlas.setdefault(single_layer, dict())[concept] =1
+    else:
+        concept_atlas[single_layer][concept]+=1 
+\end{python}
+
+
+\subsubsection{Layerübergreifende Attributionen}
+Um Konzepte, die für die ``True''-Klasse entscheidend global umfassend zu ermitteln, wird hier zuerst die Kondition gesetzt ({$y=1$}). Über alle Layer iterierend - und ebenso auch über die ``True''-Samples - 
+lassen sich die Attributionen mit \pythoninline{attribution(sample, conditions, composite, record_layer=layer_names)} bestimmen. Der Algorithmus \ref{alg:latent} zeigt hier auf, wie die fünf wichtigsten Konzepte für jedes Layer und für jedes Sample extrahiert werden. 
+
+\begin{python}[caption={Bestimmung der wichtigsten Konzepte zur Mitosen-Klassifikation im latenten Raum über alle Samples (Auszug aus der Methode \lstinline{latent_attribute_imgs()})},
+label=alg:latent]
+conditions = [{'y': [1]}]
+concept_atlas={}  
+for single_layer in layer_names:
+    layer_concept_dict={}
+    for file in os.listdir(path):
+        path_to_file = os.path.join(path,file)
+        image = Image.open(path_to_file).convert('RGB')
+        sample = transform(image).unsqueeze(0)
+        sample.requires_grad = True
+        sample = sample.to(device)  
+        attr = attribution(sample, conditions, composite, record_layer=layer_names)
+        rel_c = cc.attribute(attr.relevances[single_layer], abs_norm=True)
+        indices = torch.argsort(rel_c[0], descending=True)[:5]
+        for concept in indices:
+            concept = concept.cpu().item()
+            if ( (concept not in layer_concept_dict)) :
+                layer_concept_dict[concept] =1
+            else:
+                layer_concept_dict[concept]+=1 
+                
+    layer_concept_dict= dict( sorted(layer_concept_dict.items(),
+                                key=operator.itemgetter(1),reverse=True))
+    layer_concept_dict  = {k: layer_concept_dict[k] for k 
+                                in list(layer_concept_dict)[:5]}
+    concept_atlas[single_layer] = layer_concept_dict
+\end{python}
+
+Über die Menge an untersuchten mitotischen Beispielen der die ``True''-Klasse wird so über einen Zähler ein Voting über die wichtigsten Konzepte erstellt. Davon ausgehend werden für jedes Layer die fünf bedeutendsten Konzepte herausgefiltert, um diese als \pythoninline{concept_atlas} weiterverarbeiten zu können.
+
+\subsubsection{Bildregionenspezifische Attributionen}
+Ähnlich der globalen Ermittlung von Attributionen lassen sich spezifisch ausgewählte Bildregionen bezüglich ihrer Bedeutung für die Klassifikation analysieren.
+Auch hier werden Konditionen festgelegt (Alg.\ref{alg:local}):
+\begin{python}[caption={Ermittlung für Regionen im Eingabebereich zur Klassifikation beitragenden Konzepte (Auszug aus der Methode \lstinline{local_attribute_imgs()})},label=alg:local]
+conditions = [{single_layer: [id], 'y': [1]} for id in np.arange(0, features[ind])]
+for file in os.listdir(path):
+    imgs={}
+    mask = torch.zeros(512, 512)
+    mask[200:300, 200:300] = 1
+    path_to_file = os.path.join(path,file)
+    image = Image.open(path_to_file).convert('RGB')
+    sample = transform(image).unsqueeze(0)
+    sample.requires_grad = True
+    sample = sample.to(device)
+    rel_c = []
+    for attr in attribution.generate(sample, conditions, composite, 
+                                record_layer=layer_names, batch_size=2):
+        masked = attr.heatmap * mask[None, :, :]
+        rel_c.append(torch.sum(masked, dim=(1, 2)))
+    rel_c = torch.cat(rel_c)
+    indices = torch.argsort(rel_c, descending=True)[:5]
+\end{python}
+
+Hinsichtlich der möglichen Kandidaten, die als Konzept-Encoder in Frage kommen, wird hier eine Liste mit Indizes aller, je Layer vorhandenen Filter erstellt. Weitergehend wird eine Maske erstellt, deren mittiges Kernstück markiert ist - dies liegt der Tatsache zugrunde, dass  bei den vorliegenden Bildern die Mitosen vor Allem im Zentrum liegen. Entsprechend werden über einen Generator heatmaps mit \pythoninline{attr.heatmap} erzeugt, und mit der Maske multipliziert. Die ermittelten Relevanzen und Konzepte werden anschließend wieder auf die fünf wichtigsten reduziert.
+
+\subsubsection{Fragmentierung der Attributionen}
+Auf ähnliche Weise lassen sich die Konzepte in ihre Unterkonzepte zerlegen.
+Mit der gesetzten Zielvariable wird, über alle Layer iterierend, jeweils der Vorgänger ermittelt.
+Die Konzepte, die in einem Dictionary für das Vorgänger-Layer festgehalten worden sind, bilden die Konditionen: Der Algorithmus \ref{alg:backward} veranschaulicht dies.
+\begin{python}[caption={Generierung von Konditionen für Konzepte von Vorgängerlayern (Auszug aus der Methode \lstinline{decompose_attribute_imgs()})},label=alg:backward]
+ 
+if(single_layer != 'model_ft.features.0'):
+    prev_layer = key_layer_list[ind-1]
+    keys_list = [key for key in concept_atlas[single_layer]]
+    conditions = [{"y": [1], single_layer: [keys_list[0]]}]
+\end{python}
+
+Um nun über eine Rückpropagierung Bestandteile des Konzepts zu finden, wird über das \pythoninline{record_layer} der Ausgangspunkt, beziehungsweise das vorherige Layer respektive der Konditionen angegeben (Alg. \ref{alg:backward2}).
+\begin{python}[caption={Rückpropagierung von Relevanzen ausgehend vom aktuellen Layer (Auszug aus der Methode \lstinline{decompose_attribute_imgs()})},label=alg:backward2]
+attr = attribution(sample, conditions, composite, record_layer=[prev_layer])
+rel_c = cc.attribute(attr.relevances[prev_layer], abs_norm=True)
+\end{python}
+
+\subsection{Konzept-Visualisierung}
+
+Nach Extraktion der gewünschten Konzepte lassen sich diese weitergehend visualisieren. Hierfür wird in der Methode \pythoninline{gen_heatmaps} über ein übergebenes Dictionary iteriert, dessen Schlüssel die Netzwerklayer sind. Für jeden Schlüssel werden die Werte mit den Konzept-Indices für die Konditionen \pythoninline{conditions} befüllt. Diese werden genutzt, um über die \pythoninline{attribution} eine Reihe an Heatmaps zu dem Sample zu generieren.
+Diese werden mittels \pythoninline{zimage} zu einer Reihe an \pythoninline{PIL.Images} umgeformt - und dann in einem Dictionary abgelegt (Algorithmus \ref{alg:getheatmaps}).
+
+\newpage
+\begin{python}[caption={Generierung von Heatmaps in Abhängigkeit vom Layer, dem Sample und den Konzepten  (Auszug aus der Methode \lstinline{gen_heatmaps()})}, label=alg:getheatmaps]
+conditions = [{'model_ft.'+layer: [torch.tensor(id).to(device)], 'y': [1]} 
+                                    for id in prunable_channels[layer]]
+if len(conditions):
+    heatmap, _, _, _ = attribution(sample, conditions, composite)
+    img=(zimage.imgify(heatmap, symmetric=True, 
+                grid=(1, len(prunable_channels[layer])))) 
+    heatmaps[layer]=img
+\end{python}
+Dem zugrundeliegend können die Heatmaps durch die Methode \pythoninline{plot_imgs} grafisch dargestellt werden. Abhängig von dem der Methode übergebenen Boolean \pythoninline{pruned_bool} ändert sich die \pythoninline{flag}, und es werden Initalwerte gesetzt.
+Über die Heatmaps des Dictionaries iterierend werden diese konvertiert und mit einem Rand befüllt.
+
+Graduell wird die Schriftgröße an die anteilige, zwanzigprozentige Weite des Bildes angepasst, wie im Algorithmus \ref{alg:plot1} zu sehen ist. Über \pythoninline{PIL.ImageDraw.Draw} wird die Heatmap(-reihe) dann gerendert. 
+Entsprechend der Estimation zur Größe der Schriftart wird der Text zur oberen Mitte des \pythoninline{Images} verschoben. Um die Seitenverhältnisse aller Heatmaps zu wahren, wird die Heatmap an die geringste Breite \pythoninline{min_img_width} aller Heatmaps angepasst.
+Schlussendlich wird die Gesamthöhe um die neuen Heatmaps erweitert.
+
+\begin{python}[caption={Generierung von Heatmaps in Abhängigkeit vom Layer, dem Sample und den Konzepten  (Auszug aus der Methode \lstinline{plot_imgs()})}, label=alg:plot1]
+heatmap = heatmaps[key]
+heatmap.convert('RGB')
+heatmap = ImageOps.expand(heatmap, border=int(0.2*heatmap.size[1]), 
+                                            fill=(255,255,255))                                           
+while font.getsize(key)[0] < img_fraction*heatmap.size[0]:
+    fontsize += 1
+    font = ImageFont.truetype(fontfile, fontsize)   
+font = ImageFont.truetype(fontfile, fontsize)
+
+d = ImageDraw.Draw(heatmap)
+w,h = font.getsize(key)
+d.text((int((heatmap.width-w)/2),0), key, fill=(0,0,0),font=font)
+if heatmap.width > min_img_width:
+    heatmaps[key] = heatmap.resize((min_img_width, 
+                            int(heatmap.height / heatmap.width * min_img_width)), 
+                                Image.ANTIALIAS)
+total_height += heatmaps[key].height
+\end{python}
+
+\newpage
+Nun wird auch das Original zum Plot hinzugefügt. Diese Prozedur verläuft ähnlich; 
+Hier wird jedoch ein neues \pythoninline{Image} erzeugt, und mittels \pythoninline{paste} zuerst weiß gefüllt. Anschließend werden die Heatmaps nach und nach in jede Reihe gefügt, um abschließend das Sample, welches auf die Größe der anderen Bilder skaliert wurde zu transferieren (Alg. \ref{alg:plot2}).
+
+\begin{python}[caption={Befüllen eines \lstinline{Pil.Image} anhand der Heatmaps und des Originals (Auszug aus der Methode \lstinline{plot_imgs()})}, label=alg:plot2]
+wpercent = (min_img_width/float(sample.size[0]))
+hsize = int((float(sample.size[1])*float(wpercent)))
+
+img_merge = Image.new(heatmap.mode, (min_img_width+sample.width+
+                                    (2*int(0.1*sample.size[1])), 
+                                    total_height)).convert('RGB')
+img_merge.paste((255,255,255), [0,0,min_img_width+sample.width+
+                                2*int(0.1*sample.size[1]),total_height])
+y = 0
+for image in heatmaps.values():
+    img_merge.paste(image, (0, y))
+    y += image.height
+img_merge.paste(sample, (sample.width, 
+                            int(sample.height/2)-2*int(0.1*sample.size[1])))
+\end{python}
+
+
+%\subsection{Klassifizierung}
+%Weiterführend wird Pytorch genutzt, um das zur Verfügung gestellte Modell zu laden - und mittels festgelegten Transformationen einen \pythoninline{torchvision.datasets.ImageFolder}-Dataloader auf Grundlage des Übergebenen Pfades (\pythoninline{examples_ds_from_MP.train.HTW.train}, der sowohl positive als auch negative Klassen enthält) zu erstellen.
+%Anhand der Methode \pythoninline{train_val_dataset_split()} wird dieser Dataloader in einen Trainings- als auch den Validierungsdatensatz unterteilt (Alg. \ref{alg:datasetsplit}).
+
+
+%\begin{python}[caption={Erstellung eines Trainings- und Validierungsdatensatzes anhand von \lstinline{torch.utils.data.Subset} (Auszug aus der Methode \lstinline{train_val_dataset_split()})}, label=alg:datasetsplit]
+%datasets = {}
+%train_idx, val_idx = train_test_split(list(range(len(dataset))), 
+ %                               test_size=val_split)                              
+%datasets['train'] = torch.utils.data.Subset(dataset, train_idx)
+%datasets['val'] = torch.utils.data.Subset(dataset, val_idx)
+%\end{python}
+
+
+%Dahingehend wird das Modell nach dem Pruning erneut trainiert, um etwaige Veränderungen in der Klassifizierung zu beobachten. Hierfür wird in der Methode \pythoninline{fine_tune_model} über mehrere Epochen mittels des \pythoninline{train_loaders} die Prädiktion ermittelt und anhand der Softmax-Funktion die Differenz zu den \pythoninline{labels} dank des negativen Log-Likelihood-Fehlers bemessen.
+
+%\begin{python}[caption={Festlegung der Grundlagen zur Berechnung der Attributionen (Auszug aus der Methode \lstinline{fine_tune_model()})}, label=alg:finetuning]
+%    for epoch in range(epochs):
+%        train_loss = 0.0
+%        total_val_loss = 0.0
+%        model_pred = 0
+%        model.train()
+ %       counter = 0
+
+%        for inputs, labels in train_loader:
+%            inputs, labels = inputs.to(device), labels.to(device)
+%            output = model(inputs)
+%            log_prob = torch.nn.functional.log_softmax(output, dim=1)
+%            loss = torch.nn.functional.nll_loss(log_prob, labels)
+%            loss.backward()
+%            optimizer.step()
+%            train_loss += loss.item() * inputs.size(0)
+%\end{python}
+
+%Als Optimizer für die Parameterkorrektur wird der Lamb-Optimizer respektive des Quellcodes des 
+%Mitosenklassifikators aus \pythoninline{MAI_FINAL_MODEL_VGG/SOURCE/code/utils/lamb.py} implementiert, mit 
+%den selben Parametern:
+%\pythoninline{optimizer = Lamb.Lamb(model.parameters(), lr=0.00025, weight_decay=0.1)}.
+
+
+%Ähnlich der Bemessung der Trainingsfehler verläuft das Verfahren für das Validierungsset.
+%\newpage
+
