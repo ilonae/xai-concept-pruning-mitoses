@@ -1,5 +1,6 @@
 import torch
 import collections
+import collections.abc
 import torchvision.transforms as T
 from itertools import islice
 from crp.concepts import ChannelConcept
@@ -123,7 +124,7 @@ def init_attribution_vars(model):
 
 def nested_dict_iter(nested):
     for key, value in nested.items():
-        if isinstance(value, collections.Mapping):
+        if isinstance(value, collections.abc.Mapping):
             for inner_key, inner_value in nested_dict_iter(value):
                 yield key, inner_key, inner_value
         else:

@@ -8,7 +8,7 @@ import zennit.image as zimage
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from matplotlib import font_manager
 import matplotlib.pyplot as plt
-from pylab import savefig
+
 
 
 font = font_manager.FontProperties(family='sans-serif', weight='bold')
@@ -85,7 +85,7 @@ def vis_broadcast_heatmaps(concept_atlas,path,model,device,iteration):
         sample = sample.to(device)
         
         for layer in concept_atlas:
-            conditions =  [{layer: [35], "y": [concept_atlas[layer].keys()[0]]}, {layer: [concept_atlas[layer].keys()[0]], "y": [0]}]
+            conditions =  [{layer: [35], "y": [next(iter(concept_atlas[layer].keys()))]}, {layer: [next(iter(concept_atlas[layer].keys()))], "y": [0]}]
             heatmaps, _, _, _ = attribution(sample, conditions, composite)
             img = zimage.imgify(heatmaps, symmetric=True, grid=(1, len(heatmaps)))
             imgs[layer]=img
@@ -113,27 +113,29 @@ def plot_imgs(iteration,pruned_bool,heatmaps,sample,samplename,path):
         heatmap = heatmaps[key]
         heatmap.convert('RGB')
         heatmap = ImageOps.expand(heatmap, border=int(0.2*heatmap.size[1]), fill=(255,255,255))
-        while font.getsize(key)[0] < img_fraction*heatmap.size[0]:
+        while font.getbbox(key)[2] - font.getbbox(key)[0] < img_fraction*heatmap.size[0]:
             # iterate until the text size is just larger than the criteria
             fontsize += 1
             font = ImageFont.truetype(fontfile, fontsize)
         fontsize -= 1
         font = ImageFont.truetype(fontfile, fontsize)
         d = ImageDraw.Draw(heatmap)
-        w,h = font.getsize(key)
+        bbox = font.getbbox(key)
+        w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
         d.text((int((heatmap.width-w)/2),0), key, fill=(0,0,0),font=font)
         if heatmap.width > min_img_width:
-            heatmaps[key] = heatmap.resize((min_img_width, int(heatmap.height / heatmap.width * min_img_width)), Image.ANTIALIAS)
+            heatmaps[key] = heatmap.resize((min_img_width, int(heatmap.height / heatmap.width * min_img_width)), Image.LANCZOS)
         total_height += heatmaps[key].height
         
 
     wpercent = (min_img_width/float(sample.size[0]))
     hsize = int((float(sample.size[1])*float(wpercent)))
-    sample = sample.resize((min_img_width,hsize), Image.ANTIALIAS)
+    sample = sample.resize((min_img_width,hsize), Image.LANCZOS)
     
     sample = ImageOps.expand(sample,  border=int(0.1*sample.size[1]), fill=(255,255,255))
     d = ImageDraw.Draw(sample)
-    w,h = font.getsize("Original")
+    bbox = font.getbbox("Original")
+    w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
     d.text((int((sample.width-w)/2),0), "Original", fill=(0,0,0),font=font)
     
     img_merge = Image.new(heatmap.mode, (min_img_width+sample.width+(2*int(0.1*sample.size[1])), total_height)).convert('RGB')
