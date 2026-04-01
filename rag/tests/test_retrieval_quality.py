@@ -1,7 +1,6 @@
-import re
 import numpy as np
 import pytest
-from fixtures import EVAL_QUERIES, FIXTURE_DOCUMENTS
+from fixtures import EVAL_QUERIES
 
 # Thresholds — adjust 
 
