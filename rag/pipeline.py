@@ -22,7 +22,7 @@ CHROMA_DIR = Path(__file__).parent / "chroma_db"
 COLLECTION_NAME = "xai_papers"
 
 EMBED_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-GROQ_MODEL = "llama3-8b-8192"
+GROQ_MODEL = "llama-3.1-8b-instant"
 OLLAMA_MODEL = "llama3.2"
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 50
