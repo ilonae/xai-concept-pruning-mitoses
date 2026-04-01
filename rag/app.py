@@ -35,8 +35,12 @@ st.caption(
 def load_all():
     embed_model_name = rag.EMBED_MODEL_NAME
 
-    # Configure LlamaIndex settings
-    rag.configure_settings()
+    # Groq API key: Streamlit secrets (cloud) - env var (local .env) - None (Ollama)
+    groq_api_key = st.secrets.get("GROQ_API_KEY") if hasattr(st, "secrets") else None
+
+    # Configure LlamaIndex settings (Groq if key present, else Ollama)
+    rag.configure_settings(groq_api_key=groq_api_key)
+    rag.ensure_papers()
 
     # Build or load vector index
     index, chroma_collection = rag.build_or_load_index()
@@ -146,7 +150,7 @@ with left:
 
         with st.expander(label, expanded=(i == 0)):
 
-            # Idea 3 — keyword overlap
+            # 3 — keyword overlap
             if show_keywords:
                 kws = keyword_overlap(query, node.text)
                 if kws:
@@ -159,14 +163,12 @@ with left:
                         unsafe_allow_html=True,
                     )
 
-            # Idea 2 — sentence heatmap
+            # 2 — sentence heatmap
             if show_heatmap:
                 sent_scores = sentence_relevance(query, node.text, st_model)
                 st.markdown(heatmap_html(sent_scores), unsafe_allow_html=True)
             else:
                 st.write(node.text)
-
-# Right panel: UMAP embedding space
 
 with right:
     st.subheader("Embedding Space")
