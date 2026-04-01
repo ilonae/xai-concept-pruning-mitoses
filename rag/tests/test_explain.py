@@ -1,5 +1,3 @@
-import re
-import pytest
 from explain import heatmap_html, keyword_overlap, sentence_relevance
 
 # sentence_relevance()
@@ -34,7 +32,6 @@ class TestSentenceRelevance:
             "Histopathology images show tissue at microscopic resolution."
         )
         result = sentence_relevance("concept relevance propagation attribution", text, embed_model)
-        scores = {sent: score for sent, score in result}
         crp_score = next(s for sent, s in result if "CRP" in sent)
         weather_score = next(s for sent, s in result if "weather" in sent)
         assert crp_score > weather_score, (
