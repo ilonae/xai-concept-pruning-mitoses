@@ -6,6 +6,8 @@ Layout:
   Right panel: UMAP embedding space
 """
 
+import os
+
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
@@ -35,8 +37,24 @@ st.caption(
 def load_all():
     embed_model_name = rag.EMBED_MODEL_NAME
 
-    # Groq API key: Streamlit secrets (cloud) - env var (local .env) - None (Ollama)
-    groq_api_key = st.secrets.get("GROQ_API_KEY") if hasattr(st, "secrets") else None
+    # Resolve Groq API key — try three sources in order:
+    #   1. Streamlit Cloud secrets (st.secrets)
+    #   2. Environment variable (local dev with .env or system env)
+    #   3. None → fall back to Ollama (local only)
+    groq_api_key = None
+    try:
+        groq_api_key = st.secrets["GROQ_API_KEY"]
+    except (KeyError, FileNotFoundError):
+        groq_api_key = os.getenv("GROQ_API_KEY")
+
+    if not groq_api_key:
+        st.warning(
+            "⚠️ No GROQ_API_KEY found. "
+            "Add it in **Manage app → Settings → Secrets** on Streamlit Cloud, "
+            "or set it as an environment variable for local use. "
+            "Falling back to Ollama — this will fail on the cloud.",
+            icon="⚠️",
+        )
 
     # Configure LlamaIndex settings (Groq if key present, else Ollama)
     rag.configure_settings(groq_api_key=groq_api_key)
