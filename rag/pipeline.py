@@ -27,13 +27,21 @@ OLLAMA_MODEL = "llama3.2"
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 50
 
-# Papers to auto-download when not present locally (arXiv open access)
+# Papers to auto-download when not present locally (all open access)
 REMOTE_PAPERS = {
+    # Core: CRP — the central method of this project
     "crp_achtibat_2022.pdf": "https://arxiv.org/pdf/2206.03208",
+    # Core: LRP — the foundation CRP builds on
     "lrp_bach_2015.pdf": (
         "https://journals.plos.org/plosone/article/file"
         "?id=10.1371/journal.pone.0130140&type=printable"
     ),
+    # Zennit: the library used to implement LRP/CRP in this project
+    "zennit_anders_2021.pdf": "https://arxiv.org/pdf/2106.13200",
+    # TCAV: concept-based XAI baseline / comparison point
+    "tcav_kim_2018.pdf": "https://arxiv.org/pdf/1711.11279",
+    # Pruning by Explaining: direct inspiration for concept pruning strategy
+    "pruning_by_explaining_yeom_2019.pdf": "https://arxiv.org/pdf/1912.08290",
 }
 
 
