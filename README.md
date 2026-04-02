@@ -1,4 +1,4 @@
-# Concept Pruning — FP2 / Independent Coursework 2
+# Concept Pruning — FP2 / Independent Coursework 2 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://xai-concept-pruning-mitoses-ug7bxicybwkp7mu5yj8pwa.streamlit.app/)
 
 **Classification based on neurally learned concepts**
 HTW Berlin · Master Applied Informatics · Independent Coursework 2
@@ -139,18 +139,19 @@ Most RAG demos show *which* chunks were retrieved. This one shows *why*:
 The embedding model is multilingual (`paraphrase-multilingual-MiniLM-L12-v2`),
 so English queries correctly retrieve German-language chunks from the report.
 
-**Quick start:**
+**Live app:** [xai-concept-pruning-mitoses.streamlit.app](https://xai-concept-pruning-mitoses-ug7bxicybwkp7mu5yj8pwa.streamlit.app/)
+
+**Run locally:**
 
 ```bash
 pip install -r rag/requirements_rag.txt
-ollama serve && ollama pull llama3.2
+export GROQ_API_KEY=your_key   # free at console.groq.com
 streamlit run rag/app.py
 ```
 
-Drop additional PDFs into `rag/papers/` (CRP paper, LRP paper, TCAV, etc.) and
-delete `rag/chroma_db/` to trigger a re-index.
+Papers are downloaded automatically at startup. Delete `rag/chroma_db/` to trigger a re-index after adding new PDFs.
 
-**Stack:** LlamaIndex - ChromaDB - UMAP - Ollama - Streamlit
+**Stack:** LlamaIndex · ChromaDB · PyMuPDF · UMAP · Groq (llama-3.1-8b-instant) · Streamlit
 
 ---
 

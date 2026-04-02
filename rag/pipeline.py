@@ -1,7 +1,13 @@
 """
 RAG pipeline: index building, loading, and querying
+
+LLM selection (checked in order):
+  1. GROQ_API_KEY env var / st.secrets 
+  2. fallback: Ollama (local)
 """
 
+import os
+import urllib.request
 from pathlib import Path
 
 import chromadb
@@ -9,7 +15,6 @@ import fitz  # pymupdf
 from llama_index.core import (Document, Settings, StorageContext, VectorStoreIndex)
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.llms.ollama import Ollama
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
 PAPERS_DIR = Path(__file__).parent / "papers"
@@ -17,9 +22,27 @@ CHROMA_DIR = Path(__file__).parent / "chroma_db"
 COLLECTION_NAME = "xai_papers"
 
 EMBED_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+GROQ_MODEL = "llama-3.1-8b-instant"
 OLLAMA_MODEL = "llama3.2"
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 50
+
+# Papers to auto-download when not present locally (all open access)
+REMOTE_PAPERS = {
+    # Core: CRP — the central method of this project
+    "crp_achtibat_2022.pdf": "https://arxiv.org/pdf/2206.03208",
+    # Core: LRP — the foundation CRP builds on
+    "lrp_bach_2015.pdf": (
+        "https://journals.plos.org/plosone/article/file"
+        "?id=10.1371/journal.pone.0130140&type=printable"
+    ),
+    # Zennit: the library used to implement LRP/CRP in this project
+    "zennit_anders_2021.pdf": "https://arxiv.org/pdf/2106.13200",
+    # TCAV: concept-based XAI baseline / comparison point
+    "tcav_kim_2018.pdf": "https://arxiv.org/pdf/1711.11279",
+    # Pruning by Explaining: direct inspiration for concept pruning strategy
+    "pruning_by_explaining_yeom_2019.pdf": "https://arxiv.org/pdf/1912.08290",
+}
 
 
 def load_pdfs(papers_dir: Path) -> list[Document]:
@@ -50,9 +73,36 @@ def load_pdfs(papers_dir: Path) -> list[Document]:
     return documents
 
 
-def configure_settings(embed_model_name: str = EMBED_MODEL_NAME, ollama_model: str = OLLAMA_MODEL):
+def ensure_papers(papers_dir: Path = PAPERS_DIR) -> None:
+    """
+    Download remote papers into papers_dir if they are not already present, only fetches files listed in REMOTE_PAPERS
+    """
+    papers_dir.mkdir(parents=True, exist_ok=True)
+    for filename, url in REMOTE_PAPERS.items():
+        dest = papers_dir / filename
+        if not dest.exists():
+            print(f"Downloading {filename}…")
+            urllib.request.urlretrieve(url, dest)
+            print(f"  Saved to {dest}")
+
+
+def configure_settings(
+    groq_api_key: str | None = None,
+    embed_model_name: str = EMBED_MODEL_NAME,
+):
+    """
+    Configure LlamaIndex - Groq if a key is provided or found in the environment, otherwise fallback to local Ollama instance
+    """
     embed_model = HuggingFaceEmbedding(model_name=embed_model_name)
-    llm = Ollama(model=ollama_model, request_timeout=120.0)
+
+    key = groq_api_key or os.getenv("GROQ_API_KEY")
+    if key:
+        from llama_index.llms.groq import Groq  # pip install llama-index-llms-groq
+        llm = Groq(model=GROQ_MODEL, api_key=key)
+    else:
+        from llama_index.llms.ollama import Ollama
+        llm = Ollama(model=OLLAMA_MODEL, request_timeout=120.0)
+
     Settings.embed_model = embed_model
     Settings.llm = llm
     return embed_model
