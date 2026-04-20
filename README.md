@@ -6,6 +6,9 @@ Ilona Eisenbraun · October 2022 · Supervisor: Prof. Dr. rer. nat. Peter Hufnag
 
 > Full report: [`docs/ICW_report.pdf`](docs/ICW_report.pdf)
 
+This work builds on [CRP (Achtibat et al., Nature Machine Intelligence 2023)](https://www.nature.com/articles/s42256-023-00711-8), 
+to which I contributed as a co-author during my time at Fraunhofer HHI.
+
 ---
 
 ## Overview
